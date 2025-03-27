@@ -6,13 +6,31 @@ import '../controllers/task_controller.dart';
 import '../utils/task_status.dart';
 import 'package:provider/provider.dart';
 
+class TaskListView extends StatefulWidget {
+  @override
+  _TaskListViewState createState() => _TaskListViewState();
+}
 
-class TaskListView extends StatelessWidget {
+class _TaskListViewState extends State<TaskListView> {
+  String _searchQuery = '';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gestor de Tareas', style: AppConstants.titleStyle),
+        title: TextField(
+          decoration: InputDecoration(
+            hintText: 'Buscar tarea...',
+            border: InputBorder.none,
+            hintStyle: TextStyle(color: Colors.white70),
+          ),
+          style: TextStyle(color: Colors.white),
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value.toLowerCase();
+            });
+          },
+        ),
         backgroundColor: AppConstants.primaryColor,
       ),
       body: Consumer<TaskController>(
@@ -20,22 +38,31 @@ class TaskListView extends StatelessWidget {
           return ListView(
             children: [
               _buildTaskSection(
-                context, 
-                'Pendientes', 
-                taskController.getTasksByStatus(TaskStatus.pendiente),
-                Colors.orange
+                context,
+                'Pendientes',
+                taskController
+                    .getTasksByStatus(TaskStatus.pendiente)
+                    .where((task) => task.nombre.toLowerCase().contains(_searchQuery))
+                    .toList(),
+                Colors.orange,
               ),
               _buildTaskSection(
-                context, 
-                'En Progreso', 
-                taskController.getTasksByStatus(TaskStatus.enProgreso),
-                Colors.blue
+                context,
+                'En Progreso',
+                taskController
+                    .getTasksByStatus(TaskStatus.enProgreso)
+                    .where((task) => task.nombre.toLowerCase().contains(_searchQuery))
+                    .toList(),
+                Colors.blue,
               ),
               _buildTaskSection(
-                context, 
-                'Completadas', 
-                taskController.getTasksByStatus(TaskStatus.completada),
-                Colors.green
+                context,
+                'Completadas',
+                taskController
+                    .getTasksByStatus(TaskStatus.completada)
+                    .where((task) => task.nombre.toLowerCase().contains(_searchQuery))
+                    .toList(),
+                Colors.green,
               ),
             ],
           );
@@ -56,15 +83,10 @@ class TaskListView extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskSection(
-    BuildContext context, 
-    String title, 
-    List<Task> tasks, 
-    Color color
-  ) {
+  Widget _buildTaskSection(BuildContext context, String title, List<Task> tasks, Color color) {
     return ExpansionTile(
       title: Text(
-        '$title (${tasks.length})', 
+        '$title (${tasks.length})',
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       initiallyExpanded: true,
@@ -83,20 +105,26 @@ class TaskListView extends StatelessWidget {
           backgroundColor: color,
           child: Icon(Icons.task, color: Colors.white),
         ),
-        trailing: IconButton(
-          icon: Icon(Icons.edit, color: AppConstants.primaryColor),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TaskDetailView(task: task),
-              ),
-            );
-          },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.edit, color: AppConstants.primaryColor),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TaskDetailView(task: task),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _showDeleteDialog(context, task),
+            ),
+          ],
         ),
-        onLongPress: () {
-          _showDeleteDialog(context, task);
-        },
       ),
     );
   }
@@ -115,8 +143,7 @@ class TaskListView extends StatelessWidget {
           ElevatedButton(
             child: Text('Eliminar'),
             onPressed: () {
-              Provider.of<TaskController>(context, listen: false)
-                  .deleteTask(task.id!);
+              Provider.of<TaskController>(context, listen: false).deleteTask(task.id!);
               Navigator.of(context).pop();
             },
           ),
