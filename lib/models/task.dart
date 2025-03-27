@@ -1,3 +1,5 @@
+import 'package:cruds/utils/task_status.dart';
+
 class Task {
   String? id;
   final String nombre;
@@ -37,10 +39,6 @@ class Task {
   }
 }
 
-enum  TaskStatus{
-  pendiente,
-  enProgreso,
-  comppletada,
-}
+
 
   
