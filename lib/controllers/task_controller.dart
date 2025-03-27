@@ -1,5 +1,6 @@
 import 'package:cruds/models/task.dart';
 import 'package:cruds/services/task_service.dart';
+import 'package:cruds/utils/task_status.dart';
 import 'package:flutter/widgets.dart';
 
 class TaskController with ChangeNotifier {
